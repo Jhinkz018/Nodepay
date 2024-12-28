@@ -2,7 +2,9 @@ import os
 from dotenv import load_dotenv
 
 
-load_dotenv()
+# Explicitly load the .env file
+dotenv_path = ".env"
+load_dotenv(dotenv_path=dotenv_path)
 
 # Feature toggles
 ACTIVATE_ACCOUNTS = os.getenv('ACTIVATE_ACCOUNTS', 'True') == 'True'
