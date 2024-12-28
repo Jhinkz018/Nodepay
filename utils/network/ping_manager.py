@@ -89,9 +89,7 @@ async def start_ping(account):
     # Start ping loop
     for url in DOMAIN_API.get("PING", []):
         try:
-            parsed_url = urlparse(url)
-            path = parsed_url.path
-            logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Sending ping to {path}")
+            logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Sending ping to {urlparse(url).path}")
             data = {
                 "id": account.account_info.get("uid"),
                 "browser_id": account.browser_ids[0],
@@ -102,7 +100,7 @@ async def start_ping(account):
             response = await retry_request(url, data, account)
 
             if response is None:
-                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No response from {path}{Fore.RESET}")
+                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No response from {urlparse(url).path}{Fore.RESET}")
                 continue
         
             ping_result, network_quality = await process_ping_response(response, url, account, data)
