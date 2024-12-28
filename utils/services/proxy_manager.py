@@ -1,4 +1,5 @@
 import aiohttp
+import ssl
 
 from urllib.parse import urlparse
 from utils.settings import logger, Fore
@@ -56,19 +57,28 @@ def get_proxy_ip(proxy_url):
     except Exception:
         return "Unknown"
 
+# Create SSL context to allow self-signed certificates
+def create_ssl_context():
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    return ssl_context
+
 # Get the public IP address, optionally through a proxy
 async def get_ip_address(proxy=None):
     try:
         proxy_ip = get_proxy_ip(proxy) if proxy else "Unknown"
         url = "https://api.ipify.org?format=json"
-        
+
+        ssl_context = create_ssl_context()
+
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, proxy=proxy, ssl=False) as response:
-                
+            async with session.get(url, proxy=proxy, ssl=ssl_context) as response:
+
                 if response.status == 200:
                     result = await response.json()
                     return result.get("ip", "Unknown")
-                
+
                 return "Unknown"
     
     except Exception as e:
