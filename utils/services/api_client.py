@@ -77,16 +77,17 @@ async def send_request(url, data, account, method="POST", timeout=120):
     """
     Perform HTTP requests with proper headers and error handling.
     """
+    # Validate URL and Data
+    if not url or not isinstance(url, str):
+        raise ValueError("URL must be a valid string.")
+    if data and not isinstance(data, dict):
+        raise ValueError("Data must be a dictionary.")
+
     headers = await build_headers(url, account, method, data)
     proxies = {"http": account.proxy, "https": account.proxy} if account.proxy else None
-    response = None
 
-    parsed_url = urlparse(url)
-    path = parsed_url.path
-
-    # Ensure headers are valid
     if not headers:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL: {path}{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL: {urlparse(url).path}{Fore.RESET}")
         raise ValueError("Failed to generate headers")
 
     try:
@@ -95,33 +96,15 @@ async def send_request(url, data, account, method="POST", timeout=120):
         else:
             response = requests.post(url, json=data, headers=headers, impersonate="safari15_5", proxies=proxies, timeout=timeout)
 
-        if response is None:  # Additional safety check
-            raise ValueError("Received no response from the server.")
-
-        response.raise_for_status()
-        return response.json()
-
-    except json.JSONDecodeError:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response:{Fore.RESET} {response.text if response else 'No response'}")
-        raise
-
-    except requests.exceptions.ProxyError:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Proxy connection failed. Unable to connect to proxy{Fore.RESET}")
-        raise
-
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            retry_after = int(e.response.headers.get("Retry-After", 1))
-            logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds...{Fore.RESET}")
-            await asyncio.sleep(retry_after)
-        else:
-            short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}HTTP error occurred:{Fore.RESET} {short_error}")
-        raise
+        response.raise_for_status()  # Raise exception for HTTP errors
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response:{Fore.RESET} {getattr(response, 'text', 'No response')}")
+            raise ValueError("Invalid JSON in response")
 
     except requests.exceptions.RequestException as e:
-        short_error = str(e).split(" See")[0]
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error:{Fore.RESET} {Fore.CYAN}{path}{Fore.RESET} {short_error}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request exception occurred:{Fore.RESET} {str(e)}")
         raise
 
 # Function to send HTTP requests with retry logic using exponential backoff
@@ -130,31 +113,37 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
     Retry requests using exponential backoff.
     """
     retry_count = 0
-    parsed_url = urlparse(url)
-    path = parsed_url.path
 
     while retry_count < max_retries:
         try:
             response = await send_request(url, data, account, method)
-            return response # Return the response if successful
+            return response  # Return the response if successful
 
         except requests.exceptions.HTTPError as e:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}HTTP Error: {e.response.status_code} - {Fore.RESET} {e}")
-
-            if hasattr(e.response, "status_code") and e.response.status_code == 403:
+            if e.response and e.response.status_code == 429:
+                retry_after = int(e.response.headers.get("Retry-After", 1))
+                logger.warning(
+                    f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds...{Fore.RESET}"
+                )
+                await asyncio.sleep(retry_after)
+            elif e.response and e.response.status_code == 403:
                 logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
                 return None
+            else:
+                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}HTTP Error: {e.response.status_code} - {e}{Fore.RESET}")
 
-        except requests.exceptions.Timeout as e:
-            short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Timeout error occurred{Fore.RESET} {short_error}")
+        except requests.exceptions.Timeout:
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request timed out. Retrying...{Fore.RESET}")
 
         except Exception as e:
-            retry_count += 1
-            delay = min(await exponential_backoff(retry_count), 30)
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Retry attempt {retry_count + 1}: Retrying after {delay:.2f} seconds...")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}")
 
-    raise Exception(f"{Fore.RED}Max retries reached for {Fore.RESET}{Fore.CYAN}{path}{Fore.RESET}")
+        retry_count += 1
+        delay = await exponential_backoff(retry_count)
+        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Retry attempt {retry_count}: Retrying after {delay:.2f} seconds...")
+
+    logger.error(f"{Fore.RED}Max retries reached for URL:{Fore.RESET} {urlparse(url).path}")
+    return None
 
 # Function to implement exponential backoff delay during retries
 async def exponential_backoff(retry_count, base_delay=1):
