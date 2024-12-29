@@ -87,7 +87,7 @@ async def send_request(url, data, account, method="POST", timeout=120):
     proxies = {"http": account.proxy, "https": account.proxy} if account.proxy else None
 
     if not headers:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL: {urlparse(url).path}{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL:{Fore.RESET} {urlparse(url).path}")
         raise ValueError("Failed to generate headers")
 
     try:
