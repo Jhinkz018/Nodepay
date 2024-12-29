@@ -133,7 +133,8 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
             return await send_request(url, data, account, method)  # Return the response if successful
 
         except requests.exceptions.RequestException as e:
-            logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Request failed with error:{Fore.RESET} {e}")
+            short_error = str(e).split(" See")[0]
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error:{Fore.RESET} {short_error}")
 
         except Exception as e:
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}")
