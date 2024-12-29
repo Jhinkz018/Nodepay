@@ -129,8 +129,6 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
             elif e.response and e.response.status_code == 403:
                 logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
                 return None
-            else:
-                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}HTTP Error: {e.response.status_code} - {e}{Fore.RESET}")
 
         except requests.exceptions.Timeout:
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request timed out. Retrying...{Fore.RESET}")
