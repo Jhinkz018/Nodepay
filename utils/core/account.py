@@ -94,7 +94,7 @@ async def process():
                 await asyncio.sleep(3)
 
                 # Collect tasks related to accounts: syncing profiles and fetching total points
-                tasks = [process_account(account) for account in accounts]
+                tasks = [asyncio.create_task(process_account(account)) for account in accounts]
                 await asyncio.gather(*tasks, return_exceptions=True)
 
             logger.info(f"{Fore.CYAN}00{Fore.RESET} - Preparing to send ping, please wait...")
