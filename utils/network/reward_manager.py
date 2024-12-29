@@ -70,7 +70,9 @@ async def get_profile_info(account):
                          f"{Fore.CYAN}{mask_token(account.token)}.{Fore.RESET} Response: {response}")
 
     except Exception as e:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Profile fetch failed.{Fore.RESET} {e}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Profile fetch failed with token:{Fore.RESET} "
+                     f"{Fore.CYAN}{mask_token(account.token)}{Fore.RESET}")
+
         if hasattr(e, 'response') and e.response is not None:
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Response content:{Fore.RESET} {e.response.text}")
 
