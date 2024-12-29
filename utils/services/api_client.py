@@ -73,7 +73,7 @@ def get_endpoint_headers(url):
     return {"Accept": "application/json"}
 
 # Function to send HTTP requests with error handling and custom headers
-async def send_request(url, data, account, method="POST", timeout=120):
+async def send_request(url, data, account, method="POST", timeout=10):
     """
     Perform HTTP requests with proper headers and error handling.
     """
