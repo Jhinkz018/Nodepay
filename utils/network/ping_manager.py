@@ -98,9 +98,7 @@ async def start_ping(account):
 
             # Send request with retry handling
             response = await retry_request(url, data, account)
-
             if response is None:
-                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No response from{Fore.RESET} {urlparse(url).path}")
                 continue
         
             ping_result, network_quality = await process_ping_response(response, url, account, data)
