@@ -11,12 +11,12 @@ from utils.settings import DOMAIN_API, PING_DURATION, PING_INTERVAL, logger, For
 # Send periodic pings to the server for the given account
 async def process_ping_response(response, url, account, data):
     if not response or not isinstance(response, dict):
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid or empty response.{Fore.RESET} {response}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid or empty response. {response}{Fore.RESET}")
         return "failed", None
 
     response_data = response.get("data", {})
     if not isinstance(response_data, dict):
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid 'data' field in response:{Fore.RESET} {response_data}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid 'data' field in response: {response_data}{Fore.RESET}")
         return "failed", None
 
     logger.debug(
@@ -57,7 +57,7 @@ async def process_ping_response(response, url, account, data):
 
     except (AttributeError, KeyError, TypeError) as e:
         short_error = str(e).split(" See")[0]
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error processing response:{Fore.RESET} {short_error}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error processing response: {short_error}{Fore.RESET}")
         return "failed", None
 
 # Function to start the ping process for each account
@@ -117,7 +117,7 @@ async def start_ping(account):
                 break
 
         except KeyError as ke:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}KeyError during ping:{Fore.RESET} {ke}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}KeyError during ping: {ke}{Fore.RESET}")
 
 # Ping all accounts periodically
 async def ping_all_accounts(accounts):
@@ -132,11 +132,11 @@ async def ping_all_accounts(accounts):
             # Log errors for failed accounts
             for account, result in zip(accounts, results):
                 if isinstance(result, Exception):
-                    logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error pinging account:{Fore.RESET} {result}")
+                    logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error pinging account: {result}{Fore.RESET}")
 
         except Exception as e:
             short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error in ping_all_accounts:{Fore.RESET} {short_error}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error in ping_all_accounts: {short_error}{Fore.RESET}")
 
         logger.info(f"{Fore.CYAN}00{Fore.RESET} - Sleeping for {PING_INTERVAL} seconds before the next round")
         await asyncio.sleep(PING_INTERVAL)
