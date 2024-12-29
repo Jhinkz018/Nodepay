@@ -105,6 +105,10 @@ async def send_request(url, data, account, method="POST", timeout=120):
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response:{Fore.RESET} {getattr(response, 'text', 'No response')}")
             raise ValueError("Invalid JSON in response")
 
+        except requests.exceptions.ProxyError:
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Proxy connection failed. Unable to connect to proxy{Fore.RESET}")
+            raise
+
     except requests.exceptions.RequestException as e:
         if e.response:
             if e.response.status_code == 429:
@@ -129,10 +133,10 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
             return await send_request(url, data, account, method)  # Return the response if successful
 
         except requests.exceptions.RequestException as e:
-            logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Request failed with error:{Fore.RESET} {e}. Retrying...")
+            logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Request failed with error:{Fore.RESET} {e}")
 
         except Exception as e:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}. Retrying...")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}")
 
         retry_count += 1
         delay = await exponential_backoff(retry_count)
