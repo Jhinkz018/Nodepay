@@ -1,8 +1,8 @@
 import asyncio
 import json
 import random
-import time
 import requests
+import time
 
 from curl_cffi import requests
 from urllib.parse import urlparse
@@ -91,6 +91,8 @@ async def send_request(url, data, account, method="POST", timeout=10):
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL: {urlparse(url).path}{Fore.RESET}")
         raise ValueError("Failed to generate headers")
 
+    response = None
+
     try:
         # Choose request method
         if method == "GET":
@@ -101,10 +103,10 @@ async def send_request(url, data, account, method="POST", timeout=10):
         response.raise_for_status()  # Raise exception for HTTP errors
 
         try:
-            return response.json() # Parse JSON response
+            return response.json()  # Parse JSON response
         except json.JSONDecodeError:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response:{Fore.RESET} "
-                         f"{getattr(response, 'text', 'No response')}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response: "
+                         f"{getattr(response, 'text', 'No response')}{Fore.RESET}")
             raise ValueError("Invalid JSON in response")
 
         except requests.exceptions.ProxyError:
@@ -127,9 +129,8 @@ async def send_request(url, data, account, method="POST", timeout=10):
             time.sleep(int(retry_after))
 
         else:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request failed:{Fore.RESET} {e}")
-
-    return None
+            short_error = str(e).split(" See")[0]
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request failed: {short_error}{Fore.RESET}")
 
 # Function to send HTTP requests with retry logic using exponential backoff
 async def retry_request(url, data, account, method="POST", max_retries=3):
@@ -143,10 +144,10 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
 
         except requests.exceptions.RequestException as e:
             short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error:{Fore.RESET} {short_error}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error: {short_error}{Fore.RESET}")
 
         except Exception as e:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error: {str(e)}{Fore.RESET}")
 
         retry_count += 1
         delay = await exponential_backoff(retry_count)
