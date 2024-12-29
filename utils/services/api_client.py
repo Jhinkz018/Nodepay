@@ -91,21 +91,32 @@ async def send_request(url, data, account, method="POST", timeout=120):
         raise ValueError("Failed to generate headers")
 
     try:
+        # Choose request method
         if method == "GET":
             response = requests.get(url, headers=headers, proxies=proxies, impersonate="safari15_5", timeout=timeout)
         else:
             response = requests.post(url, json=data, headers=headers, impersonate="safari15_5", proxies=proxies, timeout=timeout)
 
         response.raise_for_status()  # Raise exception for HTTP errors
+
         try:
-            return response.json()
+            return response.json() # Parse JSON response
         except json.JSONDecodeError:
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response:{Fore.RESET} {getattr(response, 'text', 'No response')}")
             raise ValueError("Invalid JSON in response")
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request exception occurred:{Fore.RESET} {str(e)}")
-        raise
+        if e.response:
+            if e.response.status_code == 429:
+                retry_after = int(e.response.headers.get("Retry-After", 1))
+                logger.warning(
+                    f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds...{Fore.RESET}"
+                )
+                await asyncio.sleep(retry_after)
+            elif e.response.status_code == 403:
+                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
+                return None
+        raise  # Rethrow exception for higher-level handling
 
 # Function to send HTTP requests with retry logic using exponential backoff
 async def retry_request(url, data, account, method="POST", max_retries=3):
@@ -113,28 +124,15 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
     Retry requests using exponential backoff.
     """
     retry_count = 0
-
     while retry_count < max_retries:
         try:
-            response = await send_request(url, data, account, method)
-            return response  # Return the response if successful
+            return await send_request(url, data, account, method)  # Return the response if successful
 
-        except requests.exceptions.HTTPError as e:
-            if e.response and e.response.status_code == 429:
-                retry_after = int(e.response.headers.get("Retry-After", 1))
-                logger.warning(
-                    f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds...{Fore.RESET}"
-                )
-                await asyncio.sleep(retry_after)
-            elif e.response and e.response.status_code == 403:
-                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
-                return None
-
-        except requests.exceptions.Timeout:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request timed out. Retrying...{Fore.RESET}")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Request failed with error:{Fore.RESET} {e}. Retrying...")
 
         except Exception as e:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error:{Fore.RESET} {str(e)}. Retrying...")
 
         retry_count += 1
         delay = await exponential_backoff(retry_count)
