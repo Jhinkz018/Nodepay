@@ -121,11 +121,6 @@ async def start_ping(account):
         except KeyError as ke:
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}KeyError during ping:{Fore.RESET} {ke}")
 
-        except Exception as e:
-            short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error while pinging:{Fore.RESET} {short_error}")
-            await asyncio.sleep(1)
-
 # Ping all accounts periodically
 async def ping_all_accounts(accounts):
     start_time = time.time()
