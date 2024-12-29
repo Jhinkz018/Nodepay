@@ -142,7 +142,7 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
         delay = await exponential_backoff(retry_count)
         logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Retry attempt {retry_count}: Retrying after {delay:.2f} seconds...")
 
-    logger.error(f"{Fore.RED}Max retries reached for URL:{Fore.RESET} {urlparse(url).path}")
+    logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Max retries reached for URL:{Fore.RESET} {urlparse(url).path}")
     return None
 
 # Function to implement exponential backoff delay during retries
