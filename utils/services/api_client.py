@@ -78,23 +78,21 @@ async def send_request(url, data, account, method="POST", timeout=10):
     """
     Perform HTTP requests with proper headers and error handling.
     """
-    # Validate URL and Data
     if not url or not isinstance(url, str):
         raise ValueError("URL must be a valid string.")
     if data and not isinstance(data, dict):
         raise ValueError("Data must be a dictionary.")
 
     headers = await build_headers(url, account, method, data)
-    proxies = {"http": account.proxy, "https": account.proxy} if account.proxy else None
-
     if not headers:
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL: {urlparse(url).path}{Fore.RESET}")
         raise ValueError("Failed to generate headers")
 
+    proxies = {"http": account.proxy, "https": account.proxy} if account.proxy else None
     response = None
 
     try:
-        # Choose request method
+        # Select HTTP method
         if method == "GET":
             response = requests.get(url, headers=headers, proxies=proxies, impersonate="safari15_5", timeout=timeout)
         else:
@@ -132,6 +130,8 @@ async def send_request(url, data, account, method="POST", timeout=10):
             short_error = str(e).split(" See")[0]
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request failed: {short_error}{Fore.RESET}")
 
+    return None
+
 # Function to send HTTP requests with retry logic using exponential backoff
 async def retry_request(url, data, account, method="POST", max_retries=3):
     """
@@ -147,7 +147,8 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error: {short_error}{Fore.RESET}")
 
         except Exception as e:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error: {str(e)}{Fore.RESET}")
+            short_error = str(e).split(" See")[0]
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error: {short_error}{Fore.RESET}")
 
         retry_count += 1
         delay = await exponential_backoff(retry_count)
