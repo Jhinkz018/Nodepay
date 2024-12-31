@@ -112,6 +112,7 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
         raise
 
     except requests.exceptions.RequestException as e:
+        error_message = str(e)
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error: {urlparse(url).path}{Fore.RESET}")
 
         # Handle specific HTTP errors
@@ -119,13 +120,15 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
             if response.status_code == 403:
                 logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
                 time.sleep(random.uniform(5, 10))
-            
             elif response.status_code == 429:
                 retry_after = response.headers.get("Retry-After", "5")
                 logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds.{Fore.RESET}")
                 time.sleep(int(retry_after))
+        elif "timed out" in error_message:
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Connection timed out after {timeout} milliseconds{Fore.RESET}")
+
         else:
-            short_error = str(e).split(" See")[0]
+            short_error = error_message.split(" See")[0]
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request failed: {short_error}{Fore.RESET}")
 
     return None
