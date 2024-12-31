@@ -13,6 +13,7 @@ DAILY_CLAIM = os.getenv('DAILY_CLAIM', 'True') == 'True'
 # App constants
 PING_INTERVAL = int(os.getenv('PING_INTERVAL', 60))
 PING_DURATION = int(os.getenv('PING_DURATION', 1800))
+REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", 30))
 
 # Debugging
 DEBUG = os.getenv('DEBUG', 'False').strip().lower() == 'true'
