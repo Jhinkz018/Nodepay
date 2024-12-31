@@ -107,7 +107,8 @@ async def start_ping(account):
 
             identifier = await resolve_ip(account)
             logger.info(
-                f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Ping{Fore.RESET} {Fore.GREEN}{ping_result}{Fore.RESET}, "
+                f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - "
+                f"{Fore.GREEN if ping_result == 'success' else Fore.RED}Ping {ping_result}{Fore.RESET}, "
                 f"Token: {Fore.CYAN}{mask_token(account.token)}{Fore.RESET}, "
                 f"IP Score: {Fore.CYAN}{network_quality}{Fore.RESET}, "
                 f"{'Proxy' if account.proxy else 'IP Address'}: {Fore.CYAN}{identifier}{Fore.RESET}"
