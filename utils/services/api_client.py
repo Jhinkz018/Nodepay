@@ -96,7 +96,7 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
         if method == "GET":
             response = requests.get(url, headers=headers, proxies=proxies, impersonate="safari15_5", timeout=timeout)
         else:
-            response = requests.post(url, json=data, headers=headers, impersonate="safari15_5", proxies=proxies, timeout=timeout)
+            response = requests.post(url, json=data, headers=headers, proxies=proxies, impersonate="safari15_5", timeout=timeout)
 
         response.raise_for_status()  # Raise exception for HTTP errors
 
@@ -107,25 +107,23 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
                          f"{getattr(response, 'text', 'No response')}{Fore.RESET}")
             raise ValueError("Invalid JSON in response")
 
-        except requests.exceptions.ProxyError:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Proxy connection failed. Unable to connect to proxy{Fore.RESET}")
-            raise
+    except requests.exceptions.ProxyError:
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Proxy connection failed. Unable to connect to proxy{Fore.RESET}")
+        raise
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error to {urlparse(url).path}{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error: {urlparse(url).path}{Fore.RESET}")
 
-        # Handle 403 Forbidden error (permissions or proxy issue)
-        if response and response.status_code == 403:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
-            time.sleep(random.uniform(5, 10))  # Wait before retrying
-            return None
-
-        # Handle 429 Rate Limit error
-        elif response and response.status_code == 429:
-            retry_after = response.headers.get("Retry-After", "5")  # Default to 5 seconds if missing
-            logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited 429. Retrying after {retry_after} seconds.{Fore.RESET}")
-            time.sleep(int(retry_after))
-
+        # Handle specific HTTP errors
+        if response:
+            if response.status_code == 403:
+                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
+                time.sleep(random.uniform(5, 10))
+            
+            elif response.status_code == 429:
+                retry_after = response.headers.get("Retry-After", "5")
+                logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds.{Fore.RESET}")
+                time.sleep(int(retry_after))
         else:
             short_error = str(e).split(" See")[0]
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request failed: {short_error}{Fore.RESET}")
@@ -137,22 +135,17 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
     """
     Retry requests using exponential backoff.
     """
-    retry_count = 0
-    while retry_count < max_retries:
+    for retry_count in range(max_retries):
         try:
-            return await send_request(url, data, account, method)  # Return the response if successful
-
-        except requests.exceptions.RequestException as e:
-            short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request error: {short_error}{Fore.RESET}")
-
+            response = await send_request(url, data, account, method)
+            if response:
+                return response  # Return the response if successful
         except Exception as e:
             short_error = str(e).split(" See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error: {short_error}{Fore.RESET}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error: {short_error}{Fore.RESET}")
 
-        retry_count += 1
         delay = await exponential_backoff(retry_count)
-        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Retry attempt {retry_count}: Retrying after {delay:.2f} seconds...")
+        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Retry {retry_count + 1}/{max_retries}: Waiting {delay:.2f} seconds...")
 
     logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Max retries reached for URL: {urlparse(url).path}{Fore.RESET}")
     return None
