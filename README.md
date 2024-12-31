@@ -73,6 +73,7 @@ python3 main.py
 > git clone https://github.com/Enukio/NodepayBot.git
 > cd NodepayBot
 > pip install -r requirements.txt
+> cp .env-example .env
 > python main.py
 ```
 
@@ -149,6 +150,7 @@ Set the following environment variables in a `.env` file:
 | `DAILY_CLAIM`      | `True`        | Enables or disables the daily claim feature.         |
 | `PING_INTERVAL`    | `60`          | Time (in seconds) between pings to the server.       |
 | `PING_DURATION`    | `1800`        | Total duration (in seconds) for periodic pinging.    |
+| `REQUEST_TIMEOUT`  | `30`          | The default timeout (in seconds) for HTTP requests.  |
 | `DEBUG`            | `False`       | Enables or disables debug mode.                      |
 
 ---
