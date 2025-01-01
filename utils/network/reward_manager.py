@@ -87,7 +87,7 @@ async def get_earning_info(account):
 
         data = response.get('data', {})
         if not isinstance(data, dict):
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid data structure received for earning info.{Fore.RESET}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid data structure received for earning info{Fore.RESET}")
             return
 
         # Display earning information using the new function
@@ -108,7 +108,7 @@ async def process_and_claim_rewards(account):
         data = response.get('data', [])
 
         if not data:
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}No missions found for this account.{Fore.RESET}")
+            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}No missions found for this account{Fore.RESET}")
             return
 
         logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.LIGHTMAGENTA_EX}Checking rewards for account {account.index}{Style.RESET_ALL}")
@@ -148,7 +148,7 @@ async def claim_reward(account, reward_data, reward_name, required_claim=None, i
             logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}{reward_name} is locked. Progress: {current_process}/{target_process}{Fore.RESET}")
 
         elif current_process == target_process:
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}{reward_name} completed, locked. Transitioning.{Fore.RESET}")
+            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}{reward_name} completed, locked. Transitioning{Fore.RESET}")
             # Optionally try to claim again or mark it as ready
 
         else:
@@ -164,7 +164,7 @@ async def claim_reward(account, reward_data, reward_name, required_claim=None, i
 
     # Handle rewards that are already completed
     elif reward_data.get('status') == "COMPLETED":
-        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}{reward_name} has already been completed and claimed.{Fore.RESET}")
+        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}{reward_name} has already been completed and claimed{Fore.RESET}")
         account.claimed_rewards.add(reward_name.replace(" ", "-"))
 
     else:
