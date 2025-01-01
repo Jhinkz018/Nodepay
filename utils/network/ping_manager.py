@@ -56,7 +56,7 @@ async def process_ping_response(response, url, account, data):
         return ping_result, network_quality
 
     except (AttributeError, KeyError, TypeError) as e:
-        short_error = str(e).split(" See")[0]
+        short_error = str(e).split(". See")[0]
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error processing response: {short_error}{Fore.RESET}")
         return "failed", None
 
@@ -71,7 +71,7 @@ async def start_ping(account):
 
     # Validate browser_ids
     if not account.browser_ids or not isinstance(account.browser_ids[0], dict):
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid or missing browser_ids structure.{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid or missing browser_ids structure{Fore.RESET}")
         return
 
     account.browser_ids[0].setdefault('ping_count', 0)
@@ -81,7 +81,7 @@ async def start_ping(account):
     logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Current time: {current_time}, Last ping time: {last_ping_time}")
 
     if last_ping_time and (current_time - last_ping_time) < PING_INTERVAL:
-        logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Hold on! Please wait a bit longer before trying again.{Fore.RESET}")
+        logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Hold on! Please wait a bit longer before trying again{Fore.RESET}")
         return
 
     account.browser_ids[0]['last_ping_time'] = current_time
@@ -136,7 +136,7 @@ async def ping_all_accounts(accounts):
                     logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error pinging account: {result}{Fore.RESET}")
 
         except Exception as e:
-            short_error = str(e).split(" See")[0]
+            short_error = str(e).split(". See")[0]
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected error in ping_all_accounts: {short_error}{Fore.RESET}")
 
         logger.info(f"{Fore.CYAN}00{Fore.RESET} - Sleeping for {PING_INTERVAL} seconds before the next round")
