@@ -12,12 +12,12 @@ def load_proxies():
             proxies = file.read().splitlines()
 
         if not proxies:
-            logger.warning(f"{Fore.CYAN}00{Fore.RESET} - {Fore.YELLOW}No proxies found in proxies.txt. Running without proxies.{Fore.RESET}")
+            logger.warning(f"{Fore.CYAN}00{Fore.RESET} - {Fore.YELLOW}No proxies found in proxies.txt. Running without proxies{Fore.RESET}")
 
         return proxies
     
     except FileNotFoundError:
-        logger.warning(f"{Fore.CYAN}00{Fore.RESET} - {Fore.YELLOW}File proxies.txt not found. Running without proxies.{Fore.RESET}")
+        logger.warning(f"{Fore.CYAN}00{Fore.RESET} - {Fore.YELLOW}File proxies.txt not found. Running without proxies{Fore.RESET}")
         return []
 
     except Exception as e:
@@ -35,7 +35,7 @@ def get_proxy_choice():
         proxies = load_proxies()
 
         if not proxies:
-            logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}No proxies found in proxies.txt. Please add valid proxies.{Fore.RESET}")
+            logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}No proxies found in proxies.txt. Please add valid proxies{Fore.RESET}")
             return []
         return proxies
     return []
@@ -82,8 +82,7 @@ async def get_ip_address(proxy=None):
                 return "Unknown"
     
     except Exception as e:
-        error_message = str(e).split(", url")[0]
-        logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Request failed {error_message}{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Request failed: Server disconnected{Fore.RESET}")
     
     return proxy_ip
 
