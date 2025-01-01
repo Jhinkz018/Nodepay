@@ -118,17 +118,17 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
         # Handle specific HTTP errors
         if response:
             if response.status_code == 403:
-                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy.{Fore.RESET}")
+                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}403 Forbidden: Check permissions or proxy{Fore.RESET}")
                 time.sleep(random.uniform(5, 10))
             elif response.status_code == 429:
                 retry_after = response.headers.get("Retry-After", "5")
-                logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds.{Fore.RESET}")
+                logger.warning(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}Rate limited (429). Retrying after {retry_after} seconds{Fore.RESET}")
                 time.sleep(int(retry_after))
         elif "timed out" in error_message:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Connection timed out after {timeout} milliseconds{Fore.RESET}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Connection timed out after {timeout} seconds{Fore.RESET}")
 
         else:
-            short_error = error_message.split(" See")[0]
+            short_error = error_message.split(". See")[0]
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Request failed: {short_error}{Fore.RESET}")
 
     return None
@@ -144,7 +144,7 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
             if response:
                 return response  # Return the response if successful
         except Exception as e:
-            short_error = str(e).split(" See")[0]
+            short_error = str(e).split(". See")[0]
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error: {short_error}{Fore.RESET}")
 
         delay = await exponential_backoff(retry_count)
