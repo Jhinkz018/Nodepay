@@ -57,11 +57,11 @@ async def activate_accounts(accounts) -> None:
 
         if response and response.get("code") == 5 and "already activated" in response.get("msg", "").lower():
             account.status_connect = CONNECTION_STATES["CONNECTED"]
-            logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Account {account.index} is already activated.{Fore.RESET}")
+            logger.debug(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Account {account.index} is already activated{Fore.RESET}")
 
         elif response and response.get("success") and response.get("data") is True:
             account.status_connect = CONNECTION_STATES["CONNECTED"]
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Account {account.index} activated successfully.{Fore.RESET}")
+            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}Account {account.index} activated successfully{Fore.RESET}")
 
 # Synchronize account data by fetching profile and earning information
 async def process_account(account):
