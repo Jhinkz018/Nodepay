@@ -81,7 +81,7 @@ async def get_earning_info(account):
     try:
         response = await retry_request(DOMAIN_API["EARN_INFO"], {}, account, method="GET")
 
-        if not response.get('success'):
+        if not response or not response.get('success'):
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unable to fetch earning info. Response:{Fore.RESET} {response}")
             return
 
