@@ -8,6 +8,8 @@ from utils.settings import ACTIVATE_ACCOUNTS, DAILY_CLAIM, logger, Fore
 from utils.settings import DOMAIN_API, CONNECTION_STATES, setup_logging, startup_art
 
 
+cleaning_up = False
+
 # Account class to hold token, proxy, and other details for each account
 class AccountData:
     def __init__(self, token, index, proxy=None):
@@ -70,41 +72,66 @@ async def process_account(account):
     except Exception as e:
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error processing account {account.index}: {e}{Fore.RESET}")
 
+# Handles resource cleanup during interruptions
+async def clean_up_resources():
+    global cleaning_up
+    if cleaning_up:
+        return
+    
+    cleaning_up = True
+
+    for task in asyncio.all_tasks():
+        if not task.done():
+            task.cancel()
+    
+    try:
+        await asyncio.sleep(1)
+    except asyncio.CancelledError:
+        pass
+
+    logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}Cleanup completed{Fore.RESET}")
+
 # Main function to manage the application flow
 async def process():
-    startup_art()
-    setup_logging()
+    try:
+        startup_art()
+        setup_logging()
 
-    proxies = get_proxy_choice()
-    tokens = await load_tokens()
+        proxies = get_proxy_choice()
+        tokens = await load_tokens()
 
-    logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}Proceeding with{'out proxies...' if not proxies else ' proxies...'}{Fore.RESET}")
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.GREEN}Proceeding with{'out proxies...' if not proxies else ' proxies...'}{Fore.RESET}")
 
-    token_proxy_pairs = assign_proxies(tokens, proxies)
-    accounts = [AccountData(token, index, proxy) for index, (token, proxy) in enumerate(token_proxy_pairs, start=1)]
+        token_proxy_pairs = assign_proxies(tokens, proxies)
+        accounts = [AccountData(token, index, proxy) for index, (token, proxy) in enumerate(token_proxy_pairs, start=1)]
 
-    if ACTIVATE_ACCOUNTS:
-        await activate_accounts(accounts)
+        if ACTIVATE_ACCOUNTS:
+            await activate_accounts(accounts)
 
-    while True:
-        try:
-            if DAILY_CLAIM:
-                processed_tokens.clear()
-                logger.info(f"{Fore.CYAN}00{Fore.RESET} - Loading account details, checking rewards, and claiming. Please wait...")
+        while True:
+            try:
+                if DAILY_CLAIM:
+                    processed_tokens.clear()
+                    logger.info(f"{Fore.CYAN}00{Fore.RESET} - Loading account details, checking rewards, and claiming. Please wait...")
+                    await asyncio.sleep(3)
+
+                    tasks = [asyncio.create_task(process_account(account)) for account in accounts]
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                    for result in results:
+                        if isinstance(result, Exception):
+                            logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Error during account processing: {result}{Fore.RESET}")
+
+                logger.info(f"{Fore.CYAN}00{Fore.RESET} - Preparing to send ping, please wait...")
                 await asyncio.sleep(3)
 
-                # Collect tasks related to accounts: syncing profiles and fetching total points
-                tasks = [asyncio.create_task(process_account(account)) for account in accounts]
-                await asyncio.gather(*tasks, return_exceptions=True)
+                await ping_all_accounts(accounts)
 
-            logger.info(f"{Fore.CYAN}00{Fore.RESET} - Preparing to send ping, please wait...")
-            await asyncio.sleep(3)
+            except Exception as e:
+                logger.error(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Unexpected error in the main loop: {e}{Fore.RESET}")
 
-            # Ping all accounts to keep their sessions active
-            await ping_all_accounts(accounts)
-
-        except asyncio.CancelledError:
-            print("Main loop interrupted. Cleaning up...")
-            break
-        except Exception as e:
-            logger.error(f"Unexpected error in the main loop: {e}")
+    except asyncio.CancelledError:
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - {Fore.RED}Process interrupted. Cleaning up...{Fore.RESET}")
+    finally:
+        logger.info(f"{Fore.CYAN}00{Fore.RESET} - Releasing all resources...")
+        await clean_up_resources()
