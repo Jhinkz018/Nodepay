@@ -18,7 +18,7 @@ async def build_headers(url, account, method="POST", data=None):
     headers = {
         "Authorization": f"Bearer {account.token}",
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        "User-Agent": get_dynamic_impersonate(),
     }
 
     # Add endpoint-specific headers
@@ -73,6 +73,14 @@ def get_endpoint_headers(url):
     # Default minimal headers
     return {"Accept": "application/json"}
 
+# Randomly selects an impersonate value
+def get_dynamic_impersonate():
+    """
+    Generate a dynamic impersonate value that changes every minute.
+    """
+    impersonate_list = ["edge99", "edge101", "safari15_3", "safari15_5", "chrome110", "chrome116", "chrome120"]
+    return random.choice(impersonate_list)
+
 # Function to send HTTP requests with error handling and custom headers
 async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOUT):
     """
@@ -88,20 +96,29 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No headers generated for URL: {urlparse(url).path}{Fore.RESET}")
         raise ValueError("Failed to generate headers")
 
-    proxies = {"http": account.proxy, "https": account.proxy} if account.proxy else None
+    proxies = {}
+    if account.proxy:
+        proxies = {"http": account.proxy, "https": account.proxy
+
+    impersonate_value = get_dynamic_impersonate()  # Select a valid impersonate
     response = None
 
     try:
-        # Select HTTP method
+        session = requests.Session()
+        if proxies:  # Only update proxy if available
+            session.proxies.update(proxies)
+        session.headers.update(headers)
+
         if method == "GET":
-            response = requests.get(url, headers=headers, proxies=proxies, impersonate="safari15_5", timeout=timeout)
+            response = session.get(url, headers=headers, proxies=proxies, impersonate=impersonate_value, timeout=timeout)
         else:
-            response = requests.post(url, json=data, headers=headers, proxies=proxies, impersonate="safari15_5", timeout=timeout)
+            response = session.post(url, json=data, headers=headers, proxies=proxies, impersonate=impersonate_value, timeout=timeout)
 
         response.raise_for_status()  # Raise exception for HTTP errors
 
         try:
             return response.json()  # Parse JSON response
+
         except json.JSONDecodeError:
             logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to decode JSON response: "
                          f"{getattr(response, 'text', 'No response')}{Fore.RESET}")
