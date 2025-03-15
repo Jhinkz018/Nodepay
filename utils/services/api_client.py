@@ -98,7 +98,7 @@ async def send_request(url, data, account, method="POST", timeout=REQUEST_TIMEOU
 
     proxies = {}
     if account.proxy:
-        proxies = {"http": account.proxy, "https": account.proxy
+        proxies = {"http": account.proxy, "https": account.proxy}
 
     impersonate_value = get_dynamic_impersonate()  # Select a valid impersonate
     response = None
