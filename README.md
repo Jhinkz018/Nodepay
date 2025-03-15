@@ -149,8 +149,8 @@ Set the following environment variables in a `.env` file:
 |--------------------|---------------|------------------------------------------------------|
 | `ACTIVATE_ACCOUNTS`| `False`       | Enables or disables account activation feature.      |
 | `DAILY_CLAIM`      | `True`        | Enables or disables the daily claim feature.         |
-| `PING_INTERVAL`    | `60`          | Time (in seconds) between pings to the server.       |
-| `PING_DURATION`    | `1800`        | Total duration (in seconds) for periodic pinging.    |
+| `PING_INTERVAL`    | `120`          | Time (in seconds) between pings to the server.       |
+| `PING_DURATION`    | `3600`        | Total duration (in seconds) for periodic pinging.    |
 | `REQUEST_TIMEOUT`  | `30`          | The default timeout (in seconds) for HTTP requests.  |
 | `DEBUG`            | `False`       | Enables or disables debug mode.                      |
 
