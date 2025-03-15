@@ -22,10 +22,11 @@
   - `aiohttp`
   - `asyncio`
   - `colorama`
-  - `curl-cffi`
   - `loguru`
   - `python-dotenv`
   - `requests`
+  - `tls-client`
+  - `typing_extensions`
 
 ## Installation
 **Clone the repository:**
