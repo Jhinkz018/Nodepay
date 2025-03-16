@@ -79,7 +79,7 @@ def get_dynamic_impersonate():
     """
     Generate a dynamic impersonate value that changes every minute.
     """
-    impersonate_list = ["edge99", "edge101", "safari15_3", "safari15_5", "chrome110", "chrome116", "chrome120"]
+    impersonate_list = ["edge99", "edge101", "safari15_3", "safari15_5", "chrome110", "chrome116"]
     return random.choice(impersonate_list)
 
 # Function to send HTTP requests with error handling and custom headers
