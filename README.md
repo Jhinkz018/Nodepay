@@ -21,6 +21,7 @@
 - Dependencies listed in `requirements.txt`:
   - `aiohttp`
   - `asyncio`
+  - `curl-cffi`
   - `colorama`
   - `loguru`
   - `python-dotenv`
