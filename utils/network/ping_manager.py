@@ -16,7 +16,7 @@ async def process_ping_response(response, url, account, data):
 
     response_data = response.get("data", {})
     if not isinstance(response_data, dict):
-        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid 'data' field in response: {response_data}{Fore.RESET}")
+        #logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid 'data' field in response: {response_data}{Fore.RESET}")
         return "failed", None
 
     logger.debug(
