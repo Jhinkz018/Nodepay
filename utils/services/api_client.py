@@ -18,7 +18,7 @@ async def build_headers(url, account, method="POST", data=None):
     headers = {
         "Authorization": f"Bearer {account.token}",
         "Content-Type": "application/json",
-        "User-Agent": get_dynamic_impersonate(),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
     }
 
     # Add endpoint-specific headers
@@ -56,7 +56,7 @@ def get_endpoint_headers(url):
 
     # Optional headers
     optional_headers = {
-        "Sec-CH-UA": '"Google Chrome";v="122", "Chromium";v="122", "Not/A)Brand";v="99"',
+        "Sec-CH-UA": '"Not(A:Brand";v="99", "Brave";v="133", "Chromium";v="133"',
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": '"Windows"',
         "Sec-Fetch-Dest": "empty",
@@ -161,9 +161,8 @@ async def retry_request(url, data, account, method="POST", max_retries=3):
             response = await send_request(url, data, account, method)
             if response:
                 return response  # Return the response if successful
-        except Exception as e:
-            short_error = str(e).split(". See")[0]
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error: {short_error}{Fore.RESET}")
+        except Exception:
+            pass # Ignore errors and proceed with retry
 
         delay = await exponential_backoff(retry_count)
         await asyncio.sleep(delay)
