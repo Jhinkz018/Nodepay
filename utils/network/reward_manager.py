@@ -122,7 +122,7 @@ async def process_and_claim_rewards(account):
             logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}No missions found{Fore.RESET}")
             return
 
-        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Checking rewards...")
+        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.LIGHTMAGENTA_EX}Checking rewards for account {account.index}{Style.RESET_ALL}")
 
         reward_mapping = get_reward_mapping()
 
