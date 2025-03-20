@@ -101,30 +101,46 @@ async def process_and_claim_rewards(account):
     try:
         response = await retry_request(DOMAIN_API["MISSION"], {}, account, method="GET")
 
+        # Check if response is None
+        if response is None:
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No response received for mission data{Fore.RESET}")
+            return
+
+        # Ensure response contains 'success'
         if not response.get('success'):
             logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to fetch mission data:{Fore.RESET} {response}")
             return
 
         data = response.get('data', [])
 
-        if not data:
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}No missions found for this account{Fore.RESET}")
+        # Ensure 'data' is a list
+        if not isinstance(data, list):
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Unexpected data format:{Fore.RESET} {data}")
             return
 
-        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.LIGHTMAGENTA_EX}Checking rewards for account {account.index}{Style.RESET_ALL}")
+        if not data:
+            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.YELLOW}No missions found{Fore.RESET}")
+            return
 
-        # Get the reward mapping from the new function
+        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - Checking rewards...")
+
         reward_mapping = get_reward_mapping()
 
         for item in data:
-            reward_info = reward_mapping.get(str(item['id']))
+            if not isinstance(item, dict):
+                logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Invalid mission format:{Fore.RESET} {item}")
+                continue
+
+            # Get reward info safely
+            reward_info = reward_mapping.get(str(item.get('id')))
+
             if reward_info:
                 if reward_info["required"] and reward_info["required"] not in account.claimed_rewards:
                     continue
                 await claim_reward(account, item, reward_info["name"], reward_info["required"], reward_info["is_progress_based"])
 
     except Exception as e:
-        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error checking rewards:{Fore.RESET} {e}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error checking rewards:{Fore.RESET} {e}")
 
 # Handle the process of claiming daily rewards for an account
 async def claim_reward(account, reward_data, reward_name, required_claim=None, is_progress_based=False):
@@ -177,13 +193,17 @@ async def complete_reward_claim(account, mission_id, reward_type):
 
         response = await retry_request(DOMAIN_API["COMPLETE_MISSION"], data, account)
 
-        # Handle the response based on success
-        if response.get('success'):
-            earned_points = response['data']['earned_points']
-            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}{reward_type} Reward Claimed:{Fore.RESET} {Fore.CYAN}{earned_points} points{Fore.RESET}")
+        # Check if response is None
+        if response is None:
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}No response received for claiming {reward_type} reward.{Fore.RESET}")
+            return
 
+        # Process response if successful
+        if response.get('success'):
+            earned_points = response.get('data', {}).get('earned_points', 0) # Avoid KeyError
+            logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.GREEN}{reward_type} Reward Claimed:{Fore.RESET} {Fore.CYAN}{earned_points} points{Fore.RESET}")
         else:
             logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Failed to claim {reward_type} reward:{Fore.RESET} {Fore.RED}{response}{Fore.RESET}")
 
     except Exception as e:
-        logger.info(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error claiming {reward_type} reward:{Fore.RESET} {Fore.RED}{e}{Fore.RESET}")
+        logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Error claiming {reward_type} reward:{Fore.RESET} {Fore.RED}{e}{Fore.RESET}")
