@@ -61,9 +61,8 @@ def get_endpoint_headers(url):
         "Sec-Ch-Ua-Platform": '"Windows"',
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "cross-site",
-        "TE": "trailers",
-        "Pragma": "no-cache",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-Storage-Access": "active",
         "Cache-Control": "no-cache",
     }
 
