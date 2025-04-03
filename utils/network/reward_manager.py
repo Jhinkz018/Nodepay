@@ -66,8 +66,7 @@ async def get_profile_info(account):
             logger.info(separator_line)
 
         else:
-            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Session failed for token{Fore.RESET} "
-                         f"{Fore.CYAN}{mask_token(account.token)}{Fore.RESET}: {Fore.RED}Np Token Expired{Fore.RESET}")
+            logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Session failed: NP token expired{Fore.RESET}")
 
     except Exception as e:
         logger.error(f"{Fore.CYAN}{account.index:02d}{Fore.RESET} - {Fore.RED}Profile fetch failed with token:{Fore.RESET} "
