@@ -27,7 +27,7 @@ async def process_ping_response(response, url, account, data):
     )
 
     try:
-        version = response_data.get("version", "2.2.7")
+        version = response_data.get("version", "2.2.8")
         data["version"] = version
 
         ping_result = "success" if response.get("code", -1) == 0 else "failed"
