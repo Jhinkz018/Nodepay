@@ -25,7 +25,7 @@ DOMAIN_API = {
     "ACTIVATE": "https://api.nodepay.ai/api/auth/active-account",
 
     # Network Endpoints
-    "PING": ["https://nw.nodepay.org/api/network/ping"],
+    "PING": ["https://nw.nodepay.ai/api/network/ping"],
     "SESSION": "https://api.nodepay.ai/api/auth/session",
 
     # Earn and Mission Endpoints
