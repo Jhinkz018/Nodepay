@@ -13,7 +13,7 @@ init(autoreset=True)
 
 # ASCII art for program startup
 start_text = """
-    _   __          __  Version 2.0 by Enukio
+    _   __          __  Version 2.1 by 0xMeth
    / | / /___  ____/ /__  ____  ____ ___  __
   /  |/ / __ \/ __  / _ \/ __ \/ __ `/ / / /
  / /|  / /_/ / /_/ /  __/ /_/ / /_/ / /_/ / 
