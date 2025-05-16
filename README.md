@@ -32,7 +32,7 @@
 ## Installation
 **Clone the repository:**
    ```bash
-   git clone https://github.com/Enukio/NodepayBot.git
+   git clone https://github.com/Jhinkz018/Nodepay.git.git
    ```
    ```bash
    cd NodepayBot
